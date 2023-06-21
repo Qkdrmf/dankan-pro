@@ -114,6 +114,4 @@ public class UserController {
     public ResponseEntity<LogoutResponseDto> logout() {
         return ResponseEntity.ok(userService.logout());
     }
-    /**
-     * */
 }

@@ -32,7 +32,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean checkDuplicatedName(String name) {
-        final Optional<User> user = userRepository.findByNickname(name);
+        final Optional<UserResponseDto> user = userRepository.findByNickname(name);
 
         if(user.isEmpty()) {
             return false;
@@ -108,28 +108,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto findUserByNickname() {
-        User user = userRepository.findById(JwtUtil.getMemberId()).orElseThrow(() -> new UserIdNotFoundException(JwtUtil.getMemberId().toString()));
-
-        return UserResponseDto.of(user);
+        return userRepository.findByUserId(JwtUtil.getMemberId()).orElseThrow(
+                () -> new UserIdNotFoundException(JwtUtil.getMemberId().toString())
+        );
     }
 
     @Override
     public List<UserResponseDto> findAll() {
-        List<UserResponseDto> result = new ArrayList<>();
-
-        for(User user : userRepository.findAll()) {
-            result.add(UserResponseDto.of(user));
-        }
-
-        return result;
+        return userRepository.findUserList();
     }
 
     @Override
     public UserResponseDto findUserByNickname(String name) {
-        log.info("name: {}", name);
-        User user = userRepository.findByNickname(name).orElseThrow(() -> new UserNameExistException(name));
-
-        return UserResponseDto.of(user);
+        return userRepository.findByNickname(name).orElseThrow(
+                () -> new UserNameExistException(name)
+        );
     }
 
     @Override
@@ -140,7 +133,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(final String name) {
-        userRepository.delete(userRepository.findByNickname(name).orElseThrow(() -> new UserNameExistException(name)));
+        userRepository.delete(userRepository.findUserByNickname(name).orElseThrow(() -> new UserNameExistException(name)));
     }
 
     @Override

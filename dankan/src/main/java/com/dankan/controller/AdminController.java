@@ -2,7 +2,6 @@ package com.dankan.controller;
 
 import com.dankan.dto.response.login.TokenResponseDto;
 import com.dankan.dto.response.user.UserResponseDto;
-import com.dankan.repository.TokenRepository;
 import com.dankan.service.token.TokenService;
 import com.dankan.service.user.UserService;
 import io.swagger.annotations.Api;
