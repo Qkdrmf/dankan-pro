@@ -115,7 +115,5 @@ public class UserController {
         return ResponseEntity.ok(userService.logout());
     }
     /**
-     * TODO: 대학교 이메일 인증 API
-     * TODO: 핸드폰 인증
      * */
 }
