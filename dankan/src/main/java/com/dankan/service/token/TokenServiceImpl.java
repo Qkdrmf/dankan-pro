@@ -2,7 +2,7 @@ package com.dankan.service.token;
 
 import com.dankan.domain.Token;
 import com.dankan.dto.response.login.TokenResponseDto;
-import com.dankan.dto.resquest.token.TokenRequestDto;
+import com.dankan.dto.request.token.TokenRequestDto;
 import com.dankan.exception.token.TokenNotFoundException;
 import com.dankan.exception.user.UserIdNotFoundException;
 import com.dankan.repository.TokenRepository;
@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
+
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -31,7 +32,6 @@ public class TokenServiceImpl implements TokenService {
 
         Token token = tokenRepository.findTokenByAccessTokenAndRefreshToken(accessToken, JwtUtil.getRefreshToken())
                 .orElseThrow(() -> new TokenNotFoundException(tokenRequestDto.getUserId().toString()));
-
         log.info("token1 called");
 
         token.setAccessToken(

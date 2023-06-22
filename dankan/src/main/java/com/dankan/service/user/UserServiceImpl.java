@@ -10,6 +10,7 @@ import com.dankan.dto.response.user.UserResponseDto;
 import com.dankan.exception.token.TokenNotFoundException;
 import com.dankan.exception.user.UserNameExistException;
 import com.dankan.exception.user.UserIdNotFoundException;
+import com.dankan.exception.user.UserNameNotFoundException;
 import com.dankan.repository.TokenRepository;
 import com.dankan.repository.UserRepository;
 import com.dankan.util.JwtUtil;
@@ -121,7 +122,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDto findUserByNickname(String name) {
         return userRepository.findByNickname(name).orElseThrow(
-                () -> new UserNameExistException(name)
+                () -> new UserNameNotFoundException(name)
         );
     }
 

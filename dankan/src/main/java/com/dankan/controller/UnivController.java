@@ -1,7 +1,8 @@
 package com.dankan.controller;
 
+import com.dankan.dto.request.email.EmailCodeRequestDto;
 import com.dankan.dto.response.univ.UnivListResponseDto;
-import com.dankan.dto.response.user.UserResponseDto;
+import com.dankan.service.email.EmailServiceImpl;
 import com.dankan.service.univ.UnivService;
 import io.swagger.annotations.Api;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,9 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -35,7 +34,4 @@ public class UnivController {
     public ResponseEntity<List<UnivListResponseDto>> getUnivInfo() {
         return ResponseEntity.ok(univService.findAll());
     }
-    /**
-     * TODO: 학교 인증
-     * */
 }
