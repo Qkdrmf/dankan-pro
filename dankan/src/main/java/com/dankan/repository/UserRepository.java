@@ -29,6 +29,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     public Optional<User> findByPhoneNum(String phoneNum);
 
+    public Optional<User> findUserByUserId(UUID uuid);
+
     @Query(value = "select new com.dankan.dto.response.user.UserResponseDto(user.userId, user.email, user .nickname, user.gender, user.phoneNum, " +
             "user.profileImg, user.univEmail) from User user")
     public List<UserResponseDto> findUserList();

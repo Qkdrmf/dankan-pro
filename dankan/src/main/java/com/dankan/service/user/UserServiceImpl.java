@@ -150,4 +150,11 @@ public class UserServiceImpl implements UserService {
 
         return new LogoutResponseDto(expiredAccessToken);
     }
+
+    @Override
+    public List<Authority> getAuthorities() {
+        return userRepository.findUserByUserId(JwtUtil.getMemberId()).orElseThrow(
+                () -> new UserIdNotFoundException(JwtUtil.getMemberId().toString())
+        ).getAuthorities();
+    }
 }
