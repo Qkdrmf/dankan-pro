@@ -143,7 +143,7 @@ public class AdminController {
         return ResponseEntity.ok(emailService.sendSimpleMessage(email.getEmail()));
     }
 
-    @Operation(summary = "대학교 인증 메일 발송 api", description = "대학교 인증 메일 발송")
+    @Operation(summary = "대학교 인증 코드 확인 api")
     @ApiResponses(
             value = {
                     @ApiResponse(responseCode = "200", description = "발송 환료"),
