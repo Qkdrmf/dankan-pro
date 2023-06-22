@@ -8,6 +8,8 @@ import com.dankan.service.email.EmailService;
 import com.dankan.service.email.EmailServiceImpl;
 import com.dankan.service.s3.S3UploadService;
 import com.dankan.service.s3.S3UploaderServiceImpl;
+import com.dankan.service.sms.SmsService;
+import com.dankan.service.sms.SmsServiceImpl;
 import com.dankan.service.token.TokenService;
 import com.dankan.service.token.TokenServiceImpl;
 import com.dankan.service.univ.UnivService;
@@ -67,5 +69,6 @@ public class SpringConfig {
     @Bean
     public EmailService emailService() {
         return new EmailServiceImpl(javaMailSender, mail, userRepository);
+
     }
 }
