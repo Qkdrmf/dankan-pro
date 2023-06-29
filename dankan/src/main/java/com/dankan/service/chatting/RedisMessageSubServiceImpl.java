@@ -1,6 +1,7 @@
 package com.dankan.service.chatting;
 
 import com.dankan.vo.ChattingMessage;
+import com.dankan.vo.ChattingMessageResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +32,8 @@ public class RedisMessageSubServiceImpl implements RedisMessageSubService {
         String publishMessage = (String) redisTemplate.getStringSerializer().deserialize(message.getBody());
 
         try {
-            ChattingMessage chattingMessage = objectMapper.readValue(publishMessage, ChattingMessage.class);
+            ChattingMessageResponse chattingMessage = objectMapper.readValue(publishMessage, ChattingMessageResponse.class);
+
             simpMessageSendingOperations.convertAndSend("/sub/" + chattingMessage.getRoomId(), chattingMessage);
         } catch (JsonProcessingException e) {
             log.error("[Redis Pub/Sub] | Json Convert Error. publishMessage: [" + publishMessage + "]");

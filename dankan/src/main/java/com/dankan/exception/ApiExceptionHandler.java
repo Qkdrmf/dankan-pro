@@ -1,5 +1,6 @@
 package com.dankan.exception;
 
+import com.dankan.exception.chatting.ChattingRoomDataNotExistException;
 import com.dankan.exception.post.PostNotFoundException;
 import com.dankan.exception.report.PostReportNotFoundException;
 import com.dankan.exception.report.ReviewReportNotFoundException;
@@ -114,6 +115,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(RoomImageNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleException(RoomImageNotFoundException ex) {
         ApiErrorResponse response = new ApiErrorResponse("ERROR-0016", "failed to find room image from room id :  " + ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ChattingRoomDataNotExistException.class)
+    public ResponseEntity<ApiErrorResponse> handleException(ChattingRoomDataNotExistException ex) {
+        ApiErrorResponse response = new ApiErrorResponse("ERROR-0017", "room :  " + ex.getMessage() + " data is not exist");
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 }

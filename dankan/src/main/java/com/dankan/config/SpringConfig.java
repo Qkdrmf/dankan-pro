@@ -1,7 +1,13 @@
 package com.dankan.config;
 
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.s3.AmazonS3;
 import com.dankan.repository.*;
+import com.dankan.service.chatting.ChattingService;
+import com.dankan.service.chatting.ChattingServiceImpl;
+import com.dankan.service.chatting.DynamoDBService;
+import com.dankan.service.chatting.DynamoDBServiceImpl;
 import com.dankan.service.post.PostService;
 import com.dankan.service.post.PostServiceImpl;
 import com.dankan.service.report.ReportService;
@@ -46,6 +52,8 @@ public class SpringConfig {
     private final UnivRepository univRepository;
     private final JavaMailSender javaMailSender;
     private final String mail;
+    private final DynamoDBMapper dynamoDBMapper;
+    private final AmazonDynamoDB amazonDynamoDB;
 
     public SpringConfig(final UserRepository userRepository, final AmazonS3 amazonS3Client, final TokenRepository tokenRepository
                         , final PostRepository postRepository
@@ -56,7 +64,7 @@ public class SpringConfig {
                         , final ReviewRepository reviewRepository
                         , final ReviewReportRepository reviewReportRepository, final UnivRepository univRepository, final JavaMailSender javaMailSender, @Value("${mail.id}") String mail
 
-                        , final RecentWatchRepository recentWatchRepository) {
+                        , final RecentWatchRepository recentWatchRepository, final DynamoDBMapper dynamoDBMapper, final AmazonDynamoDB amazonDynamoDB) {
         this.userRepository = userRepository;
         this.amazonS3Client = amazonS3Client;
         this.tokenRepository = tokenRepository;
@@ -71,6 +79,8 @@ public class SpringConfig {
         this.univRepository = univRepository;
         this.javaMailSender = javaMailSender;
         this.mail = mail;
+        this.dynamoDBMapper = dynamoDBMapper;
+        this.amazonDynamoDB = amazonDynamoDB;
     }
 
     @Bean
@@ -121,5 +131,15 @@ public class SpringConfig {
     @Bean
     public EmailService emailService() {
         return new EmailServiceImpl(javaMailSender, mail, userRepository);
+    }
+
+    @Bean
+    public DynamoDBService dynamoDBService() {
+        return new DynamoDBServiceImpl(dynamoDBMapper, amazonDynamoDB);
+    }
+
+    @Bean
+    public ChattingService chattingService() {
+        return new ChattingServiceImpl(userRepository, dynamoDBService());
     }
 }
