@@ -86,8 +86,8 @@ public class AdminController {
             }
     )
     @GetMapping("/token/info")
-    public ResponseEntity<TokenResponseDto> getTokenInfo(@RequestParam(value = "id") String id) {
-        return ResponseEntity.ok(tokenService.findByUserId(UUID.fromString(id)));
+    public ResponseEntity<TokenResponseDto> getTokenInfo(@RequestParam(value = "id") Long id) {
+        return ResponseEntity.ok(tokenService.findByUserId(id));
     }
 
     @Operation(summary = "사용자 탈퇴 api", description = "사용자 회원 탈퇴")
@@ -146,7 +146,7 @@ public class AdminController {
             }
     )
     @GetMapping("/post-report/find")
-    public ResponseEntity<ReportResponseDto> findPostReport(@RequestParam("reportId") UUID reportId) {
+    public ResponseEntity<ReportResponseDto> findPostReport(@RequestParam("reportId") Long reportId) {
         ReportResponseDto reportResponseDto = reportService.findPostReport(reportId);
         return ResponseEntity.ok(reportResponseDto);
     }
@@ -161,7 +161,7 @@ public class AdminController {
             }
     )
     @DeleteMapping("/post-report/remove")
-    public ResponseEntity removePostReport(@RequestParam("reportId") UUID reportId) {
+    public ResponseEntity removePostReport(@RequestParam("reportId") Long reportId) {
         reportService.removePostReport(reportId);
         return ResponseEntity.ok().build();
     }
@@ -176,7 +176,7 @@ public class AdminController {
             }
     )
     @GetMapping("/review-report/find")
-    public ResponseEntity<ReportResponseDto> findReviewReport(@RequestParam("reportId") UUID reportId) {
+    public ResponseEntity<ReportResponseDto> findReviewReport(@RequestParam("reportId") Long reportId) {
         ReportResponseDto reportResponseDto = reportService.findReviewReport(reportId);
         return ResponseEntity.ok(reportResponseDto);
     }
@@ -191,7 +191,7 @@ public class AdminController {
             }
     )
     @DeleteMapping("/review-report/remove")
-    public ResponseEntity removeReviewReport(@RequestParam("reportId") UUID reportId) {
+    public ResponseEntity removeReviewReport(@RequestParam("reportId") Long  reportId) {
         reportService.removeReviewReport(reportId);
         return ResponseEntity.ok().build();
     }

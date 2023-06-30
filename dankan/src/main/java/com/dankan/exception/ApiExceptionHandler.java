@@ -1,17 +1,15 @@
 package com.dankan.exception;
 
 import com.dankan.exception.chatting.ChattingRoomDataNotExistException;
+import com.dankan.exception.options.OptionNotFoundException;
 import com.dankan.exception.post.PostNotFoundException;
 import com.dankan.exception.report.PostReportNotFoundException;
 import com.dankan.exception.report.ReviewReportNotFoundException;
 import com.dankan.exception.review.ReviewNotFoundException;
-import com.dankan.exception.room.RoomImageNotFoundException;
+import com.dankan.exception.image.ImageNotFoundException;
 import com.dankan.exception.room.RoomNotFoundException;
 import com.dankan.exception.token.TokenNotFoundException;
-import com.dankan.exception.type.InvalidPriceTypeException;
-import com.dankan.exception.type.InvalidRoomImageTypeException;
-import com.dankan.exception.type.InvalidRoomTypeException;
-import com.dankan.exception.type.InvalidSatisfyException;
+import com.dankan.exception.type.*;
 import com.dankan.exception.user.UserIdNotFoundException;
 import com.dankan.exception.user.UserNameNotFoundException;
 import com.dankan.exception.user.*;
@@ -73,19 +71,19 @@ public class ApiExceptionHandler {
     @ExceptionHandler(InvalidPriceTypeException.class)
     public ResponseEntity<ApiErrorResponse> handleException(InvalidPriceTypeException ex) {
         ApiErrorResponse response = new ApiErrorResponse("ERROR-0009","Invalid price type : "+ex.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(InvalidRoomTypeException.class)
     public ResponseEntity<ApiErrorResponse> handleException(InvalidRoomTypeException ex) {
         ApiErrorResponse response = new ApiErrorResponse("ERROR-0010","Invalid room type : "+ex.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(InvalidRoomImageTypeException.class)
     public ResponseEntity<ApiErrorResponse> handleException(InvalidRoomImageTypeException ex) {
         ApiErrorResponse response = new ApiErrorResponse("ERROR-0011","Invalid room image type : "+ex.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(InvalidSatisfyException.class)
@@ -112,8 +110,8 @@ public class ApiExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(RoomImageNotFoundException.class)
-    public ResponseEntity<ApiErrorResponse> handleException(RoomImageNotFoundException ex) {
+    @ExceptionHandler(ImageNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleException(ImageNotFoundException ex) {
         ApiErrorResponse response = new ApiErrorResponse("ERROR-0016", "failed to find room image from room id :  " + ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
@@ -121,6 +119,35 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ChattingRoomDataNotExistException.class)
     public ResponseEntity<ApiErrorResponse> handleException(ChattingRoomDataNotExistException ex) {
         ApiErrorResponse response = new ApiErrorResponse("ERROR-0017", "room :  " + ex.getMessage() + " data is not exist");
+    }
+  
+    @ExceptionHandler(InvalidOptionTypeException.class)
+    public ResponseEntity<ApiErrorResponse> handleException(InvalidOptionTypeException ex) {
+        ApiErrorResponse response = new ApiErrorResponse("ERROR-0018", "Invalid option type : " + ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidEtcOptionTypeException.class)
+    public ResponseEntity<ApiErrorResponse> handleException(InvalidEtcOptionTypeException ex) {
+        ApiErrorResponse response = new ApiErrorResponse("ERROR-0019", "Invalid option type : " + ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidManagementTypeException.class)
+    public ResponseEntity<ApiErrorResponse> handleException(InvalidManagementTypeException ex) {
+        ApiErrorResponse response = new ApiErrorResponse("ERROR-0020", "Invalid management type : " + ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidDealTypeException.class)
+    public ResponseEntity<ApiErrorResponse> handleException(InvalidDealTypeException ex) {
+        ApiErrorResponse response = new ApiErrorResponse("ERROR-0021", "Invalid deal type : " + ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(OptionNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleException(OptionNotFoundException ex) {
+        ApiErrorResponse response = new ApiErrorResponse("ERROR-0022", "Option is not found : option codeKey is " + ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 }

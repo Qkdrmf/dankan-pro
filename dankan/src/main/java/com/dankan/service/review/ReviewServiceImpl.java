@@ -1,24 +1,20 @@
 package com.dankan.service.review;
 
-import com.dankan.domain.Room;
-import com.dankan.domain.RoomImage;
-import com.dankan.domain.RoomReview;
-import com.dankan.domain.User;
-import com.dankan.domain.embedded.RoomReviewRate;
+import com.dankan.domain.*;
+import com.dankan.dto.request.image.ImageRequestDto;
 import com.dankan.dto.request.review.ReviewDetailRequestDto;
+import com.dankan.dto.response.image.ImageResponseDto;
 import com.dankan.dto.response.review.ReviewDetailResponseDto;
 import com.dankan.dto.response.review.ReviewImageResponseDto;
 import com.dankan.dto.response.review.ReviewRateResponseDto;
 import com.dankan.dto.response.review.ReviewResponseDto;
 import com.dankan.dto.request.review.ReviewRequestDto;
+import com.dankan.exception.image.ImageNotFoundException;
+import com.dankan.exception.options.OptionNotFoundException;
 import com.dankan.exception.review.ReviewNotFoundException;
-import com.dankan.exception.room.RoomImageNotFoundException;
 import com.dankan.exception.room.RoomNotFoundException;
 import com.dankan.exception.user.UserIdNotFoundException;
-import com.dankan.repository.ReviewRepository;
-import com.dankan.repository.RoomImageRepository;
-import com.dankan.repository.RoomRepository;
-import com.dankan.repository.UserRepository;
+import com.dankan.repository.*;
 import com.dankan.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -27,62 +23,69 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 public class ReviewServiceImpl implements ReviewService {
     private final UserRepository userRepository;
     private final ReviewRepository reviewRepository;
     private final RoomRepository roomRepository;
-    private final RoomImageRepository roomImageRepository;
+    private final DateLogRepository dateLogRepository;
+    private final OptionsRepository optionsRepository;
+    private final ImageRepository imageRepository;
 
-    private final Integer PAGING_COUNT = 5;
 
     public ReviewServiceImpl(UserRepository userRepository
             ,ReviewRepository reviewRepository
             ,RoomRepository roomRepository
-            ,RoomImageRepository roomImageRepository) {
+            ,DateLogRepository dateLogRepository
+            ,OptionsRepository optionsRepository
+            ,ImageRepository imageRepository) {
         this.userRepository = userRepository;
         this.reviewRepository = reviewRepository;
         this.roomRepository = roomRepository;
-        this.roomImageRepository = roomImageRepository;
+        this.dateLogRepository = dateLogRepository;
+        this.optionsRepository = optionsRepository;
+        this.imageRepository = imageRepository;
     }
 
     @Override
     @Transactional
     public ReviewResponseDto addReview(ReviewRequestDto reviewRequestDto) {
-        UUID userId = JwtUtil.getMemberId();
+        Long userId = JwtUtil.getMemberId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserIdNotFoundException(userId.toString()));
 
         Room room = roomRepository.findFirstByRoomAddress_Address(reviewRequestDto.getAddress())
                 .orElseThrow(() -> new RoomNotFoundException(reviewRequestDto.getAddress()));
 
-        RoomReview roomReview = RoomReview.of(reviewRequestDto,user,room.getRoomId());
-        reviewRepository.save(roomReview);
+        Options option = optionsRepository.findByRoomIdAndCodeKey(room.getRoomId(),"RoomType")
+                .orElseThrow(() -> new OptionNotFoundException("RoomType"));
 
-        return ReviewResponseDto.of(user,roomReview,room,null);
-    }
+        List<Options> optionsList = Options.of(room.getRoomId(),reviewRequestDto);
+        optionsRepository.saveAll(optionsList);
 
-    @Override
-    @Transactional
-    public ReviewImageResponseDto addReviewImage(UUID reviewId,String imgUrl) {
-        RoomReview roomReview = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ReviewNotFoundException(reviewId));
-        roomReview.setImageUrl(imgUrl);
-        reviewRepository.save(roomReview);
-
-        return ReviewImageResponseDto.builder()
-                .imgUrl(imgUrl)
+        DateLog dateLog = DateLog.builder()
+                .userId(userId)
+                .createdAt(LocalDate.now())
+                .lastUserId(userId)
+                .updatedAt(LocalDate.now())
                 .build();
+        dateLogRepository.save(dateLog);
+
+        RoomReview roomReview = RoomReview.of(reviewRequestDto,user,room.getRoomId(), dateLog.getId());
+        reviewRepository.save(roomReview);
+
+        return ReviewResponseDto.of(user,roomReview,null,option);
     }
 
     @Override
     @Transactional
-    public void deleteReview(UUID reviewId) {
-        UUID userId = JwtUtil.getMemberId();
+    public void deleteReview(Long reviewId) {
+        Long userId = JwtUtil.getMemberId();
+
         RoomReview roomReview = reviewRepository.findByUserIdAndReviewId(userId,reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException(reviewId));
         reviewRepository.delete(roomReview);
@@ -93,15 +96,23 @@ public class ReviewServiceImpl implements ReviewService {
     public List<ReviewResponseDto> findRecentReview(Integer pages) {
         List<ReviewResponseDto> responseDtoList = new ArrayList<>();
         Sort sort = Sort.by(Sort.Direction.DESC,"updatedAt");
-        Pageable pageable =  PageRequest.of(pages,PAGING_COUNT,sort);
+        Pageable pageable =  PageRequest.of(pages,5,sort);
         Slice<RoomReview> roomReviewList = reviewRepository.findAll(pageable);
 
         for (RoomReview roomReview : roomReviewList) {
             Room room  = roomRepository.findById(roomReview.getRoomId())
                   .orElseThrow(() -> new RoomNotFoundException(roomReview.getRoomId().toString()));
+
             User user = userRepository.findById(room.getUserId())
                     .orElseThrow(() -> new UserIdNotFoundException(room.getUserId().toString()));
-            ReviewResponseDto responseDto = ReviewResponseDto.of(user,roomReview,room,roomReview.getImageUrl());
+
+            Options option = optionsRepository.findByRoomIdAndCodeKey(room.getRoomId(),"RoomType")
+                    .orElseThrow(() -> new OptionNotFoundException("RoomType"));
+
+            Image image = imageRepository.findMainImage(room.getRoomId(),0L)
+                    .orElseThrow(() -> new ImageNotFoundException(room.getRoomId()));
+
+            ReviewResponseDto responseDto = ReviewResponseDto.of(user,roomReview,image.getImageUrl(),option);
             responseDtoList.add(responseDto);
         }
 
@@ -112,14 +123,21 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional(readOnly = true)
     public List<ReviewResponseDto> findReviewByStar(Integer pages) {
         List<ReviewResponseDto> responseDtoList = new ArrayList<>();
-        Sort sort = Sort.by(Sort.Direction.DESC,"roomReviewRate.totalRate");
-        Pageable pageable = PageRequest.of(pages,PAGING_COUNT,sort);
+        Sort sort = Sort.by(Sort.Direction.DESC,"totalRate");
+        Pageable pageable = PageRequest.of(pages,5,sort);
         Slice<RoomReview> roomReviewList = reviewRepository.findAll(pageable);
 
         for (RoomReview roomReview : roomReviewList) {
             Room room = roomRepository.findById(roomReview.getRoomId())
                     .orElseThrow(() -> new RoomNotFoundException(roomReview.getRoomId()));
-            ReviewResponseDto responseDto = ReviewResponseDto.of(room,roomReview,roomReview.getImageUrl());
+
+            Options option = optionsRepository.findByRoomIdAndCodeKey(room.getRoomId(),"RoomType")
+                    .orElseThrow(() -> new OptionNotFoundException("RoomType"));
+
+            Image image = imageRepository.findMainImage(room.getRoomId(),0L)
+                    .orElseThrow(() -> new ImageNotFoundException(room.getRoomId()));
+
+            ReviewResponseDto responseDto = ReviewResponseDto.of(roomReview,image.getImageUrl(),option);
             responseDtoList.add(responseDto);
         }
 
@@ -129,23 +147,19 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional(readOnly = true)
     public ReviewRateResponseDto findReviewRate(String address) {
-        Long reviewCount;
-        RoomReviewRate roomReviewRate = RoomReviewRate.init();
         Room room = roomRepository.findFirstByRoomAddress_Address(address)
                 .orElseThrow(() -> new RoomNotFoundException(address));
+        List<String> codeKeys = new ArrayList<>(List.of("AccessRate,CleanRate,HostRate,FacilityRate,NoiseRate"));
+        Options option = optionsRepository.findByRoomIdAndCodeKey(room.getRoomId(),"RoomType")
+                .orElseThrow(() -> new OptionNotFoundException("RoomType"));
+        List<Options> optionsList = optionsRepository.findRateOptions(room.getRoomId(),codeKeys);
 
         // 하나의 도로명 주소에는 여러 방이 있을 수 있습니다. 어떤 이미지를 대표로 가져올지 고려해봐야 합니다.
-        RoomImage roomImage = roomImageRepository.findByRoomIdAndImageType(room.getRoomId(),0L)
-                .orElseThrow(() -> new RoomImageNotFoundException(room.getRoomId()));
+        Image image = imageRepository.findMainImage(room.getRoomId(),0L)
+                .orElseThrow(() -> new ImageNotFoundException(room.getRoomId()));
 
         List<RoomReview> reviewList = reviewRepository.findByAddress(address);
-        for (RoomReview roomReview : reviewList) {
-            roomReviewRate.plusRate(roomReview);
-        }
-
-        reviewCount = (long) reviewList.size();
-
-        return ReviewRateResponseDto.of(roomReviewRate,room, reviewCount,roomImage.getRoomImageUrl());
+        return ReviewRateResponseDto.of(room,reviewList, image.getImageUrl(), option,optionsList);
     }
 
     @Override
@@ -157,10 +171,12 @@ public class ReviewServiceImpl implements ReviewService {
         List<RoomReview> roomReviewList = reviewRepository.findByAddress(reviewDetailRequestDto.getAddress(),pageable);
 
         for (RoomReview roomReview : roomReviewList) {
-            UUID userId = roomReview.getUserId();
+            Long userId = roomReview.getUserId();
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new UserIdNotFoundException(userId.toString()));
-            ReviewDetailResponseDto reviewDetailResponseDto = ReviewDetailResponseDto.of(user,roomReview);
+
+            List<Image> imageList = imageRepository.findByIdAndImageType(roomReview.getReviewId(),3L);
+            ReviewDetailResponseDto reviewDetailResponseDto = ReviewDetailResponseDto.of(user,roomReview,imageList);
             responseDtoList.add(reviewDetailResponseDto);
         }
 
