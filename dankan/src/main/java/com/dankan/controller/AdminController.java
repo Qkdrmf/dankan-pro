@@ -51,7 +51,9 @@ public class AdminController {
     @ApiResponses(
             value = {
                     @ApiResponse(responseCode = "200", description = "정보 조회 완료"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
                     @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 멤버 없음"),
             }
     )
     @GetMapping("/user/info")
@@ -64,7 +66,9 @@ public class AdminController {
     @ApiResponses(
             value = {
                     @ApiResponse(responseCode = "200", description = "정보 조회 완료"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
                     @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 멤버 없음"),
             }
     )
     @GetMapping("/user/whole-info")
@@ -76,7 +80,9 @@ public class AdminController {
     @ApiResponses(
             value = {
                     @ApiResponse(responseCode = "200", description = "정보 조회 완료"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
                     @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 멤버 없음"),
             }
     )
     @GetMapping("/token/info")
@@ -88,7 +94,9 @@ public class AdminController {
     @ApiResponses(
             value = {
                     @ApiResponse(responseCode = "200", description = "조회 환료"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
                     @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 멤버 없음"),
             }
     )
     @DeleteMapping("/user/delete")
@@ -102,7 +110,9 @@ public class AdminController {
     @ApiResponses(
             value = {
                     @ApiResponse(responseCode = "200", description = "본인 인증 메시지 보내기 환료"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
                     @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 멤버 없음"),
             }
     )
     @PostMapping("/user/message")
@@ -116,7 +126,9 @@ public class AdminController {
     @ApiResponses(
             value = {
                     @ApiResponse(responseCode = "200", description = "핸드폰 인증 환료"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
                     @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 멤버 없음"),
             }
     )
     @PostMapping("/user/verify")
@@ -128,7 +140,9 @@ public class AdminController {
     @ApiResponses(
             value = {
                     @ApiResponse(responseCode = "200", description = "특정 게시물 신고 조회 완료"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
                     @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 맴버 없음")
             }
     )
     @GetMapping("/post-report/find")
@@ -141,7 +155,9 @@ public class AdminController {
     @ApiResponses(
             value = {
                     @ApiResponse(responseCode = "200", description = "특정 게시물 신고 삭제 완료"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
                     @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 맴버 없음")
             }
     )
     @DeleteMapping("/post-report/remove")
@@ -154,7 +170,9 @@ public class AdminController {
     @ApiResponses(
             value = {
                     @ApiResponse(responseCode = "200", description = "특정 리뷰 신고 조회 완료"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
                     @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 맴버 없음")
             }
     )
     @GetMapping("/review-report/find")
@@ -167,7 +185,9 @@ public class AdminController {
     @ApiResponses(
             value = {
                     @ApiResponse(responseCode = "200", description = "특정 리뷰 신고 삭제 완료"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
                     @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 맴버 없음")
             }
     )
     @DeleteMapping("/review-report/remove")
@@ -180,7 +200,9 @@ public class AdminController {
     @ApiResponses(
             value = {
                     @ApiResponse(responseCode = "200", description = "발송 환료"),
-                    @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
+                    @ApiResponse(responseCode = "403", description = "권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 멤버 없음"),
             }
     )
     @PostMapping("/univ/mail")
@@ -192,7 +214,9 @@ public class AdminController {
     @ApiResponses(
             value = {
                     @ApiResponse(responseCode = "200", description = "발송 환료"),
-                    @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
+                    @ApiResponse(responseCode = "403", description = "권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 멤버 없음"),
             }
     )
     @PostMapping("univ/verify-code")
@@ -203,7 +227,9 @@ public class AdminController {
     @ApiOperation("채팅 기록 조회 API")
     @ApiResponses({
             @ApiResponse(responseCode = "200",description = "기록 조회 성공 "),
-            @ApiResponse(responseCode = "403",description = "관리자 권한이 없음"),
+            @ApiResponse(responseCode = "401",description = "인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "403",description = "Admin 권한이 없음"),
+            @ApiResponse(responseCode = "404",description = "해당 멤버 없음")
     })
     @GetMapping("/chatting/log")
     public ResponseEntity<List<ChattingLogResponseDto>> getChattingLog(@RequestParam("roomId") Long id) {

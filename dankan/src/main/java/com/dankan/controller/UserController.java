@@ -34,7 +34,10 @@ public class UserController {
     @Operation(summary = "닉네임 중복 체크 api", description = "닉네임 중복 체크")
     @ApiResponses(
             value = {
-                    @ApiResponse(responseCode = "200", description = "닉네임 사용 가능")
+                    @ApiResponse(responseCode = "200", description = "닉네임 사용 가능"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
+                    @ApiResponse(responseCode = "403", description = "권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 멤버 없음"),
             }
     )
     @GetMapping("/nickname")
@@ -45,7 +48,10 @@ public class UserController {
     @Operation(summary = "닉네임 변경 api", description = "닉네임 변경")
     @ApiResponses(
             value = {
-                    @ApiResponse(responseCode = "200", description = "닉네임 변경 완료")
+                    @ApiResponse(responseCode = "200", description = "닉네임 변경 완료"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
+                    @ApiResponse(responseCode = "403", description = "권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 멤버 없음"),
             }
     )
     @GetMapping("/modify-nickname")
@@ -56,7 +62,10 @@ public class UserController {
     @Operation(summary = "프로필 이미지 api", description = "프로필 이미지 변경")
     @ApiResponses(
             value = {
-                    @ApiResponse(responseCode = "200", description = "프로필 이미지 변경 완료")
+                    @ApiResponse(responseCode = "200", description = "프로필 이미지 변경 완료"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
+                    @ApiResponse(responseCode = "403", description = "권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 멤버 없음"),
             }
     )
     @PostMapping(value = "/profileImg", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -69,7 +78,10 @@ public class UserController {
     @Operation(summary = "사용자 정보 조회 api", description = "사용자 정보 조회")
     @ApiResponses(
             value = {
-                    @ApiResponse(responseCode = "200", description = "조회 환료")
+                    @ApiResponse(responseCode = "200", description = "조회 환료"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
+                    @ApiResponse(responseCode = "403", description = "권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 멤버 없음"),
             }
     )
     @GetMapping("/info")
@@ -80,7 +92,10 @@ public class UserController {
     @Operation(summary = "사용자 탈퇴 api", description = "사용자 회원 탈퇴")
     @ApiResponses(
             value = {
-                    @ApiResponse(responseCode = "200", description = "탈퇴 환료")
+                    @ApiResponse(responseCode = "200", description = "탈퇴 환료"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
+                    @ApiResponse(responseCode = "403", description = "권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 멤버 없음"),
             }
     )
     @DeleteMapping("/delete")
@@ -93,7 +108,10 @@ public class UserController {
     @Operation(summary = "로그아웃 api", description = "로그아웃")
     @ApiResponses(
             value = {
-                    @ApiResponse(responseCode = "200", description = "로그아웃 환료")
+                    @ApiResponse(responseCode = "200", description = "로그아웃 환료"),
+                    @ApiResponse(responseCode = "401", description = "토큰 만료"),
+                    @ApiResponse(responseCode = "403", description = "권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "해당 멤버 없음"),
             }
     )
     @GetMapping("/logout")

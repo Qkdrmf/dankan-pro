@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -32,11 +33,13 @@ public class JwtCustomFilter extends OncePerRequestFilter {
     protected void doFilterInternal(final HttpServletRequest request, final HttpServletResponse response, final FilterChain filterChain) throws ServletException, IOException {
         final String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
+        log.info("JWT FILTER Called");
+
         // bearer이 아니면 오류
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("text/plain;charset=UTF-8"); // content-type을 text/plain으로 설정
-            response.getWriter().write("JWT Token does not begin with Bearer String");
+            log.error("JWT Token does not begin with Bearer String");
+
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "JWT Token does not begin with Bearer String");
 
             return;
         }
@@ -46,18 +49,18 @@ public class JwtCustomFilter extends OncePerRequestFilter {
 
         // Token 검증
         if (!JwtUtil.validateToken(token)) {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.setContentType("text/plain;charset=UTF-8"); // content-type을 text/plain으로 설정
-            response.getWriter().write("JWT Token is not valid");
+            log.error("JWT Token is not valid");
+
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "JWT Token is not valid");
 
             return;
         }
 
         // Token 만료 체크
         if (JwtUtil.isExpired(token)) {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.setContentType("text/plain;charset=UTF-8"); // content-type을 text/plain으로 설정
-            response.getWriter().write("JWT Token is expired");
+            log.error("JWT is not expired");
+
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT Token is expired");
 
             return;
         }
@@ -68,9 +71,9 @@ public class JwtCustomFilter extends OncePerRequestFilter {
         Optional<User> member = userRepository.findById(memberId);
 
         if(member.isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.setContentType("text/plain;charset=UTF-8"); // content-type을 text/plain으로 설정
-            response.getWriter().write("JWT Token is not valid");
+            log.error("JWT Token is not valid");
+
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "JWT Token is not valid");
 
             filterChain.doFilter(request, response);
 
@@ -87,9 +90,8 @@ public class JwtCustomFilter extends OncePerRequestFilter {
             role = "ROLE_USER";
         }
         else {
-            response.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
-            response.setContentType("text/plain;charset=UTF-8"); // content-type을 text/plain으로 설정
-            response.getWriter().write("User do not have permission");
+            log.error("User has not permission");
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "User has not permission");
 
             return;
         }
