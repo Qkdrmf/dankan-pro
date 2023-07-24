@@ -4,10 +4,8 @@ import com.dankan.domain.*;
 import com.dankan.dto.request.image.ImageRequestDto;
 import com.dankan.dto.request.review.ReviewDetailRequestDto;
 import com.dankan.dto.response.image.ImageResponseDto;
-import com.dankan.dto.response.review.ReviewDetailResponseDto;
-import com.dankan.dto.response.review.ReviewImageResponseDto;
-import com.dankan.dto.response.review.ReviewRateResponseDto;
-import com.dankan.dto.response.review.ReviewResponseDto;
+import com.dankan.dto.response.post.PostFilterResponseDto;
+import com.dankan.dto.response.review.*;
 import com.dankan.dto.request.review.ReviewRequestDto;
 import com.dankan.exception.image.ImageNotFoundException;
 import com.dankan.exception.options.OptionNotFoundException;
@@ -25,8 +23,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class ReviewServiceImpl implements ReviewService {
@@ -88,7 +86,7 @@ public class ReviewServiceImpl implements ReviewService {
         Slice<RoomReview> roomReviewList = reviewRepository.findAll(pageable);
 
         for (RoomReview roomReview : roomReviewList) {
-            String imgUrls = null;
+            String imgUrls = "";
             User user = userRepository.findById(roomReview.getUserId())
                     .orElseThrow(() -> new UserIdNotFoundException(roomReview.getUserId().toString()));
 
@@ -107,6 +105,52 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ReviewSearchResponse> findReviewByBuildingName(String buildingName) {
+        List<ReviewSearchResponse> responseDtoList = new ArrayList<>();
+        HashMap<String,List<RoomReview>> reviewHashMap = new HashMap<>();
+
+        List<RoomReview> roomReviewList = reviewRepository.findByBuildingName(buildingName); // 건물 이름으로
+
+        for (RoomReview roomReview : roomReviewList) {
+            String roomBuildingName = roomReview.getAddress().split(" ")[4];
+
+            if (reviewHashMap.containsKey(roomBuildingName)) {
+                reviewHashMap.get(roomBuildingName).add(roomReview);
+            } else {
+                List<RoomReview> newRoomList = new ArrayList<>();
+                newRoomList.add(roomReview);
+                reviewHashMap.put(roomBuildingName,newRoomList);
+            }
+        }
+
+        for (Map.Entry<String, List<RoomReview>> hashMap : reviewHashMap.entrySet()) {
+            String address = hashMap.getValue().get(0).getAddress();
+            String imgUrl = "";
+
+            if (roomRepository.findFirstByRoomAddress_Address(address).isPresent()) {
+                Room room = roomRepository.findFirstByRoomAddress_Address(address)
+                        .orElseThrow(() -> new RoomNotFoundException(address));
+
+                Image image = imageRepository.findMainImage(room.getRoomId(),0L)
+                        .orElseThrow(() -> new ImageNotFoundException(room.getRoomId()));
+
+                imgUrl = image.getImageUrl();
+            }
+
+            ReviewSearchResponse reviewSearchResponse = ReviewSearchResponse.of(hashMap.getValue(),imgUrl);
+            responseDtoList.add(reviewSearchResponse);
+        }
+
+
+        responseDtoList.sort( //별점 순 조회
+                Comparator.comparing(ReviewSearchResponse::getAvgTotalRate).reversed()
+        );
+        
+        return responseDtoList;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ReviewResponseDto> findReviewByStar(Integer pages) {
         List<ReviewResponseDto> responseDtoList = new ArrayList<>();
         Sort sort = Sort.by(Sort.Direction.DESC,"totalRate");
@@ -114,7 +158,7 @@ public class ReviewServiceImpl implements ReviewService {
         Slice<RoomReview> roomReviewList = reviewRepository.findAll(pageable);
 
         for (RoomReview roomReview : roomReviewList) {
-            String imgUrls = null;
+            String imgUrls = "";
 
             if (roomReview.getImageId()!=null) {
                 Image image = imageRepository.findById(roomReview.getImageId())
@@ -144,13 +188,7 @@ public class ReviewServiceImpl implements ReviewService {
             }
         }
 
-        Room room = roomRepository.findFirstByRoomAddress_Address(address)
-                .orElseThrow(() -> new RoomNotFoundException(address));
-
-        Options option = optionsRepository.findRoomTypeOption(room.getRoomId(),"RoomType")
-                .orElseThrow(() -> new OptionNotFoundException("RoomType"));
-
-        return ReviewRateResponseDto.of(reviewList,option,address,imgUrl);
+        return ReviewRateResponseDto.of(reviewList,address,imgUrl);
     }
 
     @Override
