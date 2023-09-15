@@ -1,15 +1,9 @@
 package com.dankan.service.review;
 
 import com.dankan.domain.*;
-import com.dankan.dto.request.image.ImageRequestDto;
-import com.dankan.dto.request.review.ReviewDetailRequestDto;
-import com.dankan.dto.response.image.ImageResponseDto;
-import com.dankan.dto.response.post.PostFilterResponseDto;
 import com.dankan.dto.response.review.*;
 import com.dankan.dto.request.review.ReviewRequestDto;
 import com.dankan.exception.image.ImageNotFoundException;
-import com.dankan.exception.options.OptionNotFoundException;
-import com.dankan.exception.review.ReviewDuplicatedException;
 import com.dankan.exception.review.ReviewNotFoundException;
 import com.dankan.exception.room.RoomNotFoundException;
 import com.dankan.exception.user.UserIdNotFoundException;
@@ -24,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class ReviewServiceImpl implements ReviewService {
@@ -32,7 +25,6 @@ public class ReviewServiceImpl implements ReviewService {
     private final ReviewRepository reviewRepository;
     private final RoomRepository roomRepository;
     private final DateLogRepository dateLogRepository;
-    private final OptionsRepository optionsRepository;
     private final ImageRepository imageRepository;
 
 
@@ -40,13 +32,11 @@ public class ReviewServiceImpl implements ReviewService {
             ,ReviewRepository reviewRepository
             ,RoomRepository roomRepository
             ,DateLogRepository dateLogRepository
-            ,OptionsRepository optionsRepository
             ,ImageRepository imageRepository) {
         this.userRepository = userRepository;
         this.reviewRepository = reviewRepository;
         this.roomRepository = roomRepository;
         this.dateLogRepository = dateLogRepository;
-        this.optionsRepository = optionsRepository;
         this.imageRepository = imageRepository;
     }
 
@@ -109,36 +99,46 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional(readOnly = true)
     public List<ReviewSearchResponse> findReviewByAddress(String address) {
-        List<ReviewSearchResponse> responseDtoList = new ArrayList<>();
-        HashMap<String,List<RoomReview>> reviewHashMap = new HashMap<>();
-
         List<RoomReview> roomReviewList = reviewRepository.findByAddressSearch(address);
+
+        HashMap<String,List<RoomReview>> reviewHashMap = getRoomViewListHash(roomReviewList);
+
+        return getReviewSearchResponseList(reviewHashMap);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReviewSearchResponse> findReviewByStar() {
+        List<RoomReview> roomReviewList = reviewRepository.findAll();
+
+        HashMap<String,List<RoomReview>> reviewHashMap = getRoomViewListHash(roomReviewList);
+
+        return getReviewSearchResponseList(reviewHashMap);
+    }
+
+    // 같은 주소끼리 리뷰들을 묶어준다.
+    private HashMap<String,List<RoomReview>> getRoomViewListHash(List<RoomReview> roomReviewList) {
+        HashMap<String,List<RoomReview>> reviewHashMap = new HashMap<>();
 
         for (RoomReview roomReview : roomReviewList) {
             String roomAddress = roomReview.getAddress();
-
             if (reviewHashMap.containsKey(roomAddress)) {
                 reviewHashMap.get(roomAddress).add(roomReview);
             } else {
-                List<RoomReview> newRoomList = new ArrayList<>();
-                newRoomList.add(roomReview);
-                reviewHashMap.put(roomAddress,newRoomList);
+                reviewHashMap.put(roomAddress, new ArrayList<>(Arrays.asList(roomReview)));
             }
         }
 
+        return reviewHashMap;
+    }
+
+    //같은 주소끼리 묶인 리뷰 평균 총별점 + 별점별 정렬
+    private List<ReviewSearchResponse> getReviewSearchResponseList(HashMap<String,List<RoomReview>> reviewHashMap) {
+        List<ReviewSearchResponse> responseDtoList = new ArrayList<>();
+
         for (Map.Entry<String, List<RoomReview>> hashMap : reviewHashMap.entrySet()) {
             String reviewAddress = hashMap.getValue().get(0).getAddress();
-            String imgUrl = "";
-
-            if (roomRepository.findByAddress(address,1L).isPresent()) {
-                Room room = roomRepository.findByAddress(reviewAddress,1L)
-                        .orElseThrow(() -> new RoomNotFoundException(address));
-
-                Image image = imageRepository.findMainImage(room.getRoomId(),0L)
-                        .orElseThrow(() -> new ImageNotFoundException(room.getRoomId()));
-
-                imgUrl = image.getImageUrl();
-            }
+            String imgUrl = findRoomMainImageByAddress(reviewAddress);
 
             ReviewSearchResponse reviewSearchResponse = ReviewSearchResponse.of(hashMap.getValue(),imgUrl);
             responseDtoList.add(reviewSearchResponse);
@@ -153,54 +153,33 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReviewResponseDto> findReviewByStar(Integer pages) {
-        List<ReviewResponseDto> responseDtoList = new ArrayList<>();
-        Sort sort = Sort.by(Sort.Direction.DESC,"totalRate");
-        Pageable pageable = PageRequest.of(pages,10,sort);
-        Slice<RoomReview> roomReviewList = reviewRepository.findActiveReview(pageable);
-
-        for (RoomReview roomReview : roomReviewList) {
-            String imgUrls = "";
-
-            if (roomReview.getImageId()!=null) {
-                Image image = imageRepository.findById(roomReview.getImageId())
-                        .orElseThrow(() -> new ImageNotFoundException(roomReview.getImageId()));
-                imgUrls = image.getImageUrl();
-            }
-
-            ReviewResponseDto responseDto = ReviewResponseDto.of(roomReview,imgUrls);
-            responseDtoList.add(responseDto);
-        }
-
-        return responseDtoList;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ReviewRateResponseDto findReviewRate(String address) {
-        String imgUrl = "";
+    public ReviewDetailResponseDto findReviewDetail(String address) {
         List<RoomReview> reviewList = reviewRepository.findByAddress(address);
+        String imgUrl = findRoomMainImageByAddress(address);
 
-        if (reviewList.size() == 0) {
-            throw new ReviewNotFoundException(address);
+        return ReviewDetailResponseDto.of(reviewList,imgUrl);
+    }
+
+    private String findRoomMainImageByAddress(String address) {
+        String imgUrl = null;
+
+        if (roomRepository.findByAddress(address,1L).isPresent()) {
+            Room room = roomRepository.findByAddress(address,1L)
+                    .orElseThrow(() -> new RoomNotFoundException(address));
+
+            Image image = imageRepository.findMainImage(room.getRoomId(),0L)
+                    .orElseThrow(() -> new ImageNotFoundException(room.getRoomId()));
+
+            imgUrl = image.getImageUrl();
         }
 
-        // 하나의 도로명 주소에는 여러 방이 있을 수 있습니다. 어떤 이미지를 대표로 가져올지 고려해봐야 합니다.
-        for (RoomReview roomReview : reviewList) {
-            if (roomReview.getImageId()!=null) {
-                Image image = imageRepository.findById(roomReview.getImageId())
-                        .orElseThrow(() -> new ImageNotFoundException(roomReview.getImageId()));
-                imgUrl = image.getImageUrl();
-            }
-        }
-
-        return ReviewRateResponseDto.of(reviewList,address,imgUrl);
+        return imgUrl;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReviewDetailResponseDto> findReviewDetail(String address, Integer pages) {
-        List<ReviewDetailResponseDto> responseDtoList = new ArrayList<>();
+    public List<OtherReviewResponseDto> findOtherReview(String address, Integer pages) {
+        List<OtherReviewResponseDto> responseDtoList = new ArrayList<>();
         Sort sort = Sort.by(Sort.Direction.DESC,"createdAt");
         Pageable pageable = PageRequest.of(pages,10,sort);
         List<RoomReview> roomReviewList = reviewRepository.findByAddress(address,pageable);
@@ -211,8 +190,8 @@ public class ReviewServiceImpl implements ReviewService {
                     .orElseThrow(() -> new UserIdNotFoundException(userId.toString()));
 
             List<Image> imageList = imageRepository.findByIdAndImageType(roomReview.getReviewId(),3L);
-            ReviewDetailResponseDto reviewDetailResponseDto = ReviewDetailResponseDto.of(user,roomReview,imageList);
-            responseDtoList.add(reviewDetailResponseDto);
+            OtherReviewResponseDto otherReviewResponseDto = OtherReviewResponseDto.of(user,roomReview,imageList);
+            responseDtoList.add(otherReviewResponseDto);
         }
 
         return responseDtoList;

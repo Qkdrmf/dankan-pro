@@ -2,13 +2,8 @@ package com.dankan.controller;
 
 import com.dankan.dto.request.image.ImageRequestDto;
 import com.dankan.dto.response.image.ImageResponseDto;
-import com.dankan.dto.response.review.ReviewDetailResponseDto;
-import com.dankan.dto.response.review.ReviewRateResponseDto;
-import com.dankan.dto.response.review.ReviewResponseDto;
-import com.dankan.dto.request.review.ReviewDetailRequestDto;
+import com.dankan.dto.response.review.*;
 import com.dankan.dto.request.review.ReviewRequestDto;
-import com.dankan.dto.response.review.ReviewSearchResponse;
-import com.dankan.repository.ImageRepository;
 import com.dankan.service.image.ImageService;
 import com.dankan.service.review.ReviewService;
 import com.dankan.service.s3.S3UploadService;
@@ -33,15 +28,13 @@ import java.util.List;
 @Api(tags = {"후기 관련 api"})
 @RequiredArgsConstructor
 public class ReviewController {
-    private final ImageRepository imageRepository;
-
     private final ReviewService reviewService;
     private final S3UploadService s3UploadService;
     private final ImageService imageService;
 
     @ApiOperation("매물 후기 조회 API")
     @ApiResponses({
-            @ApiResponse(responseCode = "200",description = "매물 후기 상세 조회 성공 ")
+            @ApiResponse(responseCode = "200",description = "매물 후기 조회 성공 ")
     })
     @GetMapping("/recent")
     public ResponseEntity<List<ReviewResponseDto>> getReviews(@RequestParam("pages") Integer pages) {
@@ -54,28 +47,18 @@ public class ReviewController {
             @ApiResponse(responseCode = "200",description = "매물 후기 별점순 조회 성공 ")
     })
     @GetMapping("/star")
-    public ResponseEntity<List<ReviewResponseDto>> getReviewsByStar(@RequestParam("pages") Integer pages) {
-        List<ReviewResponseDto> responseDtoList = reviewService.findReviewByStar(pages);
+    public ResponseEntity<List<ReviewSearchResponse>> getReviewsByStar() {
+        List<ReviewSearchResponse> responseDtoList = reviewService.findReviewByStar();
         return ResponseEntity.ok(responseDtoList);
     }
 
-    @ApiOperation("매물 리뷰 평점 조회 API")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200",description = "매물 리뷰 평점 조회 API")
-    })
-    @GetMapping("/rate")
-    public ResponseEntity<ReviewRateResponseDto> getReviewRate(@RequestParam("address") String address) {
-        ReviewRateResponseDto responseDto = reviewService.findReviewRate(address);
-        return ResponseEntity.ok(responseDto);
-    }
-
-    @ApiOperation("매물 상세 리뷰 조회 API")
+    @ApiOperation("매물 다른 리뷰 조회 API")
     @ApiResponses({
             @ApiResponse(responseCode = "200",description = "매물 상세 리뷰 조회 API")
     })
-    @GetMapping("/detail")
-    public ResponseEntity<List<ReviewDetailResponseDto>> getReviewDetail(@RequestParam String address,@RequestParam Integer pages) {
-        List<ReviewDetailResponseDto> responseDtoList = reviewService.findReviewDetail(address,pages);
+    @GetMapping("/other/review")
+    public ResponseEntity<List<OtherReviewResponseDto>> getReviewDetail(@RequestParam String address, @RequestParam Integer pages) {
+        List<OtherReviewResponseDto> responseDtoList = reviewService.findOtherReview(address,pages);
         return ResponseEntity.ok(responseDtoList);
     }
 
@@ -124,5 +107,14 @@ public class ReviewController {
     public ResponseEntity<List<ReviewSearchResponse>> searchByAddress(@RequestParam("address") String address) {
         List<ReviewSearchResponse> responseDtoList = reviewService.findReviewByAddress(address);
         return ResponseEntity.ok(responseDtoList);
+    }
+    
+    @ApiOperation("도로명 주소/건물 이름으로 후기 상세 정보 조회")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200",description = "후기 상세 정보 조회 성공")
+    })
+    @GetMapping("/detail")
+    public ResponseEntity<ReviewDetailResponseDto> getReviewDetail(@RequestParam String address) {
+        return ResponseEntity.ok(reviewService.findReviewDetail(address));
     }
 }
