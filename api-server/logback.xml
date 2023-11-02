@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- 로그파일 저장 경로 -->
+    <property name="LOG_DIR" value="./log" />
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} : %30logger{5} - %msg%n
+            </Pattern>
+        </layout>
+    </appender>
+    <!-- // CONSOLE -->
+    <!-- SYSLOG, 포괄적인 기본 시스템 로그 출력 설정, 여러개의 파일을 순회하면서 로그를 찍기 위하여 사용 -->
+    <appender name="SYSLOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>./log/syslog/syslog.log</file>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} : %30logger{5} - %msg%n
+            </Pattern>
+        </layout>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>./log/syslog/syslog.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <!-- 한 파일의 최대 저장 기한 -->
+            <maxHistory>7</maxHistory>
+            <!-- 로그 파일의 총 용량 제어, maxHistory가 더 높은 우선순위로 제어 -->
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="SYSLOG" />
+    </root>
+    <logger name="com.dankan" level="debug" additivity="false">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="SYSLOG" />
+    </logger>
+
+
+</configuration>

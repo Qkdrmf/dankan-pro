@@ -1,0 +1,47 @@
+version: '3'
+
+# https://ploz.tistory.com/entry/19-docker-compose-%EB%AC%B8%EB%B2%95
+services:
+  dankan-api-server:
+    build:
+      context: api-server
+      dockerfile: Dockerfile
+    environment:
+      AWS_S3_ACCESS_KEY: AKIAUVIBHU2ZYFD76VOE
+      AWS_S3_BUCKET: dankan-images
+      AWS_S3_SECRET_KEY: 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
+      DB_IP: 13.124.192.194
+      DB_PORT: 59358
+      DB_SCHEMA: staging
+      DB_USERNAME: root
+      DB_PASSWORD: dankan123456
+      JWT_TOKEN_HEADER: Bearer
+      JWT_TOKEN_SECRET_KEY: b6570a46daad7484c6070f1b99abfb7f4a216af03b5421a28b3a66a31db50796b5a3f5bcf7c23e9d7f28a1163fb767a97a7366216f5439e24de7add33c881984c92e4e2207e2ff43c754fa1bf07d321e739c97bec6acfdd783abb23b111861b1f15286621b0b61f3bb327390c005f5b4c1de2a5ed6c96d6b5a16ed5e951d1813b7828b1716fb008d6a9532ecbfb8c5e11da6651481a4e3ee06a61c6d46e5e9c60d073f7ef5e5cc0f7dbc85e37b20349400c67dbcd52dbbd67cfbd2049118c614a1a55682612efd7acf8b2b5d082f7109d534359c9fad738457f97b52f1adb8e83e28e38dce39e7592e4d4810cff5064cb8e1fbad579f64942d05d93a68120376
+      KAKAO_API_KEY: 00c48270395b6a27deb3c5a044c1407f
+      #KAKAO_REDIRECT_URL: http://3.39.112.43:8080/login/kakao/token
+      KAKAO_REDIRECT_URL: http://localhost:3000/auth/login/kakao
+      GOOGLE_CLIENT_ID: 368395021197-qfvitvvm9ocvse7ibjgulclo4m44pcce.apps.googleusercontent.com
+      GOOGLE_CLIENT_SECRET: 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
+      GOOGLE_REDIRECT_URL: http://localhost:8080/login/google/token
+      PHONE_NUMBER: 010-9210-2745
+      SMS_API_KEY: NCSAW8M8DY0K0BIJ
+      SMS_API_SECRET_KEY: VNOCKLFUD236WQEDSQIICSVADBRZBLCJ
+      NAVER_ID: dankan2023@naver.com
+      NAVER_PASSWORD: ekszks0617!
+      LOG_DIR: ./log 
+      SLACK_WEBHOOK_URL: https://hooks.slack.com/services/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
+      DYNAMODB_ACCESS_KEY: AKIAUVIBHU2Z65XDLZED
+      DYNAMODB_ENDPOINT: dynamodb.ap-northeast-2.amazonaws.com
+      DYNAMODB_REGION: ap-northeast-2
+      DYNAMODB_SECRET_KEY: AoIb79UjaP9lLy09BuoKQ8YaGkHrG+j41DRfydtw
+      REDIS_HOST: 13.124.192.194
+      REDIS_PORT: 59013
+      SENTRY_AUTH_TOKEN: fce267ae13fc11ee9e6d1227a380a9df
+      SENTRY_DSN: https://dce1c261e9cc4a1b989abe0e509104cc@o4505424877649920.ingest.sentry.io/4505424934600704
+      LOG_FILE_DIR: /home/ubuntu/logback.xml
+      PROFILE: server
+      TZ: Asia/Seoul
+    ports:
+      - 8080:8080
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
